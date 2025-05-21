@@ -38,7 +38,7 @@ module.exports = {
     const socket = io(cleanUrl, {
       transports: ["websocket"],
       reconnection: false,
-      timeout: 3000,
+      timeout: 10000,
       path: "/socket.io",
     });
 
