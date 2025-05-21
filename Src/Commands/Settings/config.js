@@ -7,6 +7,8 @@ module.exports = {
   name: "config",
   description: "Validate and save your Uptime Kuma username, password, and URL",
   category: "Configuration",
+  cooldown: 20,
+
 
   data: new SlashCommandBuilder()
     .setName("config")

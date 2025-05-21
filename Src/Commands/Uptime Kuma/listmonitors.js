@@ -7,6 +7,8 @@ module.exports = {
   name: "listmonitors",
   description: "List all your Uptime Kuma monitors with pagination.",
   category: "Monitoring",
+  cooldown: 10,
+
 
   data: new SlashCommandBuilder()
     .setName("listmonitors")
