@@ -14,7 +14,7 @@ module.exports = {
       option.setName("target").setDescription("The user").setRequired(false)
     ),
 
-  async execute(client, interaction) {
+  async execute(interaction, client) {
     const user = interaction.options.getUser("target") || interaction.user;
     const member = interaction.guild?.members.cache.get(user.id);
 

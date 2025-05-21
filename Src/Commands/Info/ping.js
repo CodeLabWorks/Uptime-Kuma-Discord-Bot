@@ -18,7 +18,7 @@ module.exports = {
     .setName("ping")
     .setDescription("Check the bot's latency."),
 
-  async execute(client, interaction) {
+  async execute(interaction, client) {
     await interaction.reply({ content: "Pinging..." });
     const sent = await interaction.fetchReply();
 

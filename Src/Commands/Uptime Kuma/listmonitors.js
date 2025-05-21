@@ -1,10 +1,4 @@
-const {
-  SlashCommandBuilder,
-  EmbedBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle
-} = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const fs = require("fs");
 const path = require("path");
 const io = require("socket.io-client");
@@ -14,6 +8,7 @@ module.exports = {
   description: "List all your Uptime Kuma monitors with pagination.",
   category: "Monitoring",
   cooldown: 10,
+
 
   data: new SlashCommandBuilder()
     .setName("listmonitors")
@@ -25,83 +20,46 @@ module.exports = {
 
     await interaction.deferReply({ flags: 64 });
 
-    if (!fs.existsSync(configPath)) {
-      return interaction.editReply({
-        content: "❌ Configuration file not found. Use `/config` first."
-      });
-    }
-
     const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
     const userConfig = config.users?.[userId];
 
     if (!userConfig) {
-      return interaction.editReply({
-        content: "❌ You haven't set up Uptime Kuma. Use `/config` first."
-      });
+      return interaction.editReply({ content: "❌ You haven't set up Uptime Kuma. Use `/config` first." });
     }
 
     const { username, password, url, token } = userConfig;
-
     if ((!username || !password) && !token || !url) {
       return interaction.editReply({ content: "❌ Incomplete configuration." });
     }
 
-    // 🔄 Normalize and convert URL to proper ws/wss
-    let socketUrl = url.trim().replace(/\/$/, ""); // remove trailing slash
-    if (socketUrl.startsWith("http://")) {
-      socketUrl = "ws://" + socketUrl.slice(7);
-    } else if (socketUrl.startsWith("https://")) {
-      socketUrl = "wss://" + socketUrl.slice(8);
-    }
-    console.log(`[DEBUG] Using socket URL: ${socketUrl}`);
-
-    const socket = io(socketUrl, {
+    const socket = io(url.replace(/\/$/, ""), {
       transports: ["websocket"],
       reconnection: false,
       timeout: 8000,
-      path: "/socket.io"
+      path: "/socket.io",
     });
 
     try {
       await new Promise((resolve, reject) => {
         socket.on("connect", () => {
-          console.log("[DEBUG] Connected to socket server.");
-        });
-
-        socket.on("disconnect", (reason) => {
-          console.log(`[DEBUG] Disconnected: ${reason}`);
-        });
-
-        socket.on("connect_error", (err) => {
-          console.error("[DEBUG] Connect error:", err.message);
-          reject(new Error(`Connection error: ${err.message}`));
-        });
-
-        socket.on("error", (err) => {
-          console.error("[DEBUG] General error:", err);
         });
 
         socket.on("loginRequired", () => {
-          const loginPayload = token
-            ? ["loginByToken", { token }]
-            : ["login", { username, password }];
-
-          console.log("[DEBUG] Sending login payload...");
+          const loginPayload = token ? ["loginByToken", { token }] : ["login", { username, password }];
           socket.emit(...loginPayload, (res) => {
-            console.log("[DEBUG] Login response:", res);
             if (res.ok) resolve();
             else reject(new Error(res.msg));
           });
         });
 
-        // Fallback login in case loginRequired doesn't fire
+        socket.on("connect_error", (err) => {
+          reject(new Error(`Connection error: ${err.message}`));
+        });
+
+        // Fallback in case loginRequired doesn't emit
         setTimeout(() => {
-          const loginPayload = token
-            ? ["loginByToken", { token }]
-            : ["login", { username, password }];
-          console.log("[DEBUG] Sending fallback login...");
+          const loginPayload = token ? ["loginByToken", { token }] : ["login", { username, password }];
           socket.emit(...loginPayload, (res) => {
-            console.log("[DEBUG] Fallback login response:", res);
             if (res.ok) resolve();
             else reject(new Error(res.msg));
           });
@@ -109,23 +67,19 @@ module.exports = {
       });
 
       const monitors = await new Promise((resolve, reject) => {
-        const timeout = setTimeout(
-          () => reject(new Error("Timeout waiting for monitorList")),
-          8000
-        );
+        const timeout = setTimeout(() => reject(new Error("Timeout waiting for monitorList")), 8000);
         socket.once("monitorList", (data) => {
           clearTimeout(timeout);
-          console.log("[DEBUG] Received monitor list.");
           socket.disconnect();
           resolve(Object.values(data));
         });
-        socket.emit("getMonitorList");
       });
 
       if (monitors.length === 0) {
         return interaction.editReply({ content: "ℹ️ No monitors found." });
       }
 
+      // Pagination logic
       const pageSize = 5;
       let currentPage = 0;
 
@@ -137,21 +91,19 @@ module.exports = {
         const embed = new EmbedBuilder()
           .setTitle("📊 Uptime Kuma Monitors")
           .setColor(0x00bfff)
-          .setFooter({
-            text: `Page ${page + 1} of ${Math.ceil(monitors.length / pageSize)}`
-          });
+          .setFooter({ text: `Page ${page + 1} of ${Math.ceil(monitors.length / pageSize)}` });
 
         items.forEach((m, i) => {
           embed.addFields({
             name: `${start + i + 1}. ${m.name}`,
             value: [
               `🔗 **URL**: [Link](${m.url})`,
-              `⚙️ **Type**: \`${m.type?.toUpperCase() || "UNKNOWN"} ${m.method || ""}\``,
+              `⚙️ **Type**: \`${m.type.toUpperCase()} ${m.method}\``,
               `✅ **Active**: \`${m.active ? "Yes" : "No"}\``,
               `⏱ **Interval**: \`${m.interval}s\`, Timeout: \`${m.timeout}s\``,
               `🔄 **Retries**: \`${m.maxretries}\`, Ignore TLS: \`${m.ignoreTls}\``
             ].join("\n"),
-            inline: false
+            inline: false,
           });
         });
 
@@ -177,15 +129,11 @@ module.exports = {
       const initialEmbed = generateEmbed(currentPage);
       const initialRow = getActionRow(currentPage, totalPages);
 
-      const message = await interaction.editReply({
-        embeds: [initialEmbed],
-        components: [initialRow],
-        fetchReply: true
-      });
+      const message = await interaction.editReply({ embeds: [initialEmbed], components: [initialRow], fetchReply: true });
 
       const collector = message.createMessageComponentCollector({
         time: 60000,
-        filter: (i) => i.user.id === userId
+        filter: (i) => i.user.id === userId,
       });
 
       collector.on("collect", async (i) => {
@@ -201,9 +149,10 @@ module.exports = {
       collector.on("end", () => {
         interaction.editReply({ components: [] }).catch(() => {});
       });
+
     } catch (err) {
-      console.error("[ERROR]", err);
+      console.error(err);
       return interaction.editReply({ content: `❌ Error: ${err.message}` });
     }
-  }
+  },
 };

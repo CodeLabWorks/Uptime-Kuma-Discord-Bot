@@ -11,7 +11,7 @@ module.exports = {
     .setName("uptime")
     .setDescription("Check how long the bot has been running."),
 
-  async execute(client, interaction) {
+  async execute(interaction, client) {
     const totalSeconds = Math.floor(process.uptime());
     const days = Math.floor(totalSeconds / 86400);
     const hours = Math.floor((totalSeconds % 86400) / 3600);

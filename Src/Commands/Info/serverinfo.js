@@ -10,7 +10,7 @@ module.exports = {
     .setName("serverinfo")
     .setDescription("Displays info about the server."),
 
-  async execute(client, interaction) {
+  async execute(interaction, client) {
     const { guild } = interaction;
 
     const embed = new EmbedBuilder()

@@ -11,7 +11,7 @@ module.exports = {
     .setName("servericon")
     .setDescription("Shows the server's icon."),
 
-  async execute(client, interaction) {
+  async execute(interaction, client) {
     const iconURL = interaction.guild.iconURL({ dynamic: true, size: 1024 });
 
     if (!iconURL) {

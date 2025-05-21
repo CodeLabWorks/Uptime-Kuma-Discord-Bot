@@ -10,7 +10,7 @@ module.exports = {
     .setName("botinfo")
     .setDescription("Displays info about the bot."),
 
-  async execute(client, interaction) {
+  async execute(interaction, client) {
     const embed = new EmbedBuilder()
       .setTitle("🤖 Bot Info")
       .setColor("Blue")
