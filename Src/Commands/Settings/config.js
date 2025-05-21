@@ -13,16 +13,10 @@ module.exports = {
     .setName("config")
     .setDescription("Validate your Uptime Kuma credentials")
     .addStringOption((option) =>
-      option
-        .setName("username")
-        .setDescription("Your Uptime Kuma username")
-        .setRequired(true)
+      option.setName("username").setDescription("Your Uptime Kuma username").setRequired(true)
     )
     .addStringOption((option) =>
-      option
-        .setName("password")
-        .setDescription("Your Uptime Kuma password")
-        .setRequired(true)
+      option.setName("password").setDescription("Your Uptime Kuma password").setRequired(true)
     )
     .addStringOption((option) =>
       option
@@ -38,6 +32,8 @@ module.exports = {
     const userId = interaction.user.id;
 
     const cleanUrl = url.replace(/\/$/, "");
+
+    await interaction.deferReply({ ephemeral: true });
 
     const socket = io(cleanUrl, {
       transports: ["websocket"],
@@ -89,16 +85,14 @@ module.exports = {
 
       socket.disconnect();
 
-      return interaction.reply({
+      return interaction.editReply({
         content: "✅ Credentials validated and configuration saved successfully!",
-        flags: 1 << 6, // ephemeral
       });
     } catch (error) {
       socket.disconnect();
       console.error("Validation error:", error);
-      return interaction.reply({
+      return interaction.editReply({
         content: `❌ Validation failed: ${error.message}`,
-        flags: 1 << 6, // ephemeral
       });
     }
   },
