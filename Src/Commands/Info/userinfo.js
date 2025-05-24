@@ -15,17 +15,17 @@ module.exports = {
     ),
 
   async execute(interaction, client) {
-    const user = interaction.options.getUser("target") || interaction.user;
-    const member = interaction.guild?.members.cache.get(user.id);
+    const targetUser = interaction.options.getUser("target") || interaction.user;
+    const member = interaction.guild?.members.cache.get(targetUser.id);
 
     const embed = new EmbedBuilder()
       .setTitle("👤 User Info")
       .setColor("Blurple")
-      .setThumbnail(user.displayAvatarURL({ dynamic: true }))
+      .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
       .addFields(
-        { name: "Username", value: user.tag, inline: true },
-        { name: "User ID", value: user.id, inline: true },
-        { name: "Created", value: `<t:${Math.floor(user.createdTimestamp / 1000)}:R>` },
+        { name: "Username", value: targetUser.tag, inline: true },
+        { name: "User ID", value: targetUser.id, inline: true },
+        { name: "Created", value: `<t:${Math.floor(targetUser.createdTimestamp / 1000)}:R>` },
         ...(member ? [{ name: "Joined Server", value: `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>` }] : [])
       );
 

@@ -14,7 +14,7 @@ module.exports = {
       option.setName("user").setDescription("The user").setRequired(false)
     ),
 
-  async execute(interaction, client) {
+  async execute(client, interaction) {
     const member = interaction.options.getMember("user") || interaction.member;
 
     if (!member) {

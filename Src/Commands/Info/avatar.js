@@ -14,7 +14,7 @@ module.exports = {
       option.setName("user").setDescription("The user").setRequired(false)
     ),
 
-  async execute(interaction, client) {
+  async execute(client, interaction) {
     const user = interaction.options.getUser("user") || interaction.user;
     const avatarUrl = user.displayAvatarURL({ dynamic: true, size: 1024 });
 

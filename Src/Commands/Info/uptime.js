@@ -1,3 +1,4 @@
+
 const { SlashCommandBuilder } = require("discord.js");
 
 module.exports = {
@@ -11,7 +12,7 @@ module.exports = {
     .setName("uptime")
     .setDescription("Check how long the bot has been running."),
 
-  async execute(interaction, client) {
+  async execute(interaction) {
     const totalSeconds = Math.floor(process.uptime());
     const days = Math.floor(totalSeconds / 86400);
     const hours = Math.floor((totalSeconds % 86400) / 3600);
@@ -20,6 +21,7 @@ module.exports = {
 
     await interaction.reply({
       content: `🕒 Uptime: **${days}d ${hours}h ${minutes}m ${seconds}s**`,
+      flags: 1 << 6
     });
   },
 };
