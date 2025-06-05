@@ -5,6 +5,7 @@ const {
   DEFAULT_USER_PERMISSIONS,
 } = require("../../Functions/permissions");
 const { checkAndSetCooldown } = require("../../Functions/cooldown");
+const settings = require("../../Settings/settings.json"); 
 
 module.exports = {
   name: "interactionCreate",
@@ -46,9 +47,9 @@ module.exports = {
     }
 
     if (devOnly) {
-      const devs = Array.isArray(client.config?.Developer?.id)
-        ? client.config.Developer.id
-        : [client.config?.Developer?.id];
+      const devs = Array.isArray(settings?.Developer?.ids)
+        ? settings.Developer.ids
+        : [settings?.Developer?.ids];
       if (!devs.includes(userId)) {
         return interaction.reply({
           content: "❌ You do not have permission to use this developer-only command.",

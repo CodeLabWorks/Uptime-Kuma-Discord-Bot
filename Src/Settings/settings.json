@@ -1,0 +1,11 @@
+{
+    "Bot": {
+        "token": "",
+        "id": ""
+    },
+  "Developer": {
+    "ids": ["developerid"]
+  },
+  "Guild": {
+    "id": ["guildid"]
+  }}
