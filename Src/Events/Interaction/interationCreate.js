@@ -5,11 +5,28 @@ const {
   DEFAULT_USER_PERMISSIONS,
 } = require("../../Functions/permissions");
 const { checkAndSetCooldown } = require("../../Functions/cooldown");
-const settings = require("../../Settings/settings.json"); 
+const settings = require("../../Settings/settings.json");
 
 module.exports = {
   name: "interactionCreate",
   async execute(interaction, client) {
+    if (interaction.isAutocomplete()) {
+      const command = client.slashCommands.get(interaction.commandName);
+      if (command && typeof command.autocomplete === "function") {
+        try {
+          await command.autocomplete(interaction, client);
+        } catch (error) {
+          console.error(
+            `❌ Autocomplete error in command ${command.name}:`,
+            error
+          );
+          await interaction.respond([]);
+        }
+      }
+      return;
+    }
+
+    // ⬇️ Normal slash command handler
     if (!interaction.isChatInputCommand()) return;
 
     const command = client.slashCommands.get(interaction.commandName);
@@ -35,14 +52,15 @@ module.exports = {
     if (toggleOffCmd) {
       return interaction.reply({
         content: "⚠️ This command is currently disabled.",
-        ephemeral: true,
+        flags: 64,
       });
     }
 
     if (maintenanceCmd && client.config?.maintenance) {
       return interaction.reply({
-        content: "⚠️ Bot is under maintenance. This command is temporarily unavailable.",
-        ephemeral: true,
+        content:
+          "⚠️ Bot is under maintenance. This command is temporarily unavailable.",
+        flags: 64,
       });
     }
 
@@ -52,8 +70,9 @@ module.exports = {
         : [settings?.Developer?.ids];
       if (!devs.includes(userId)) {
         return interaction.reply({
-          content: "❌ You do not have permission to use this developer-only command.",
-          ephemeral: true,
+          content:
+            "❌ You do not have permission to use this developer-only command.",
+          flags: 64,
         });
       }
     }
@@ -61,14 +80,14 @@ module.exports = {
     if (guildOnly && !guild) {
       return interaction.reply({
         content: "❌ This command can only be used inside a server.",
-        ephemeral: true,
+        flags: 64,
       });
     }
 
     if (!dmPermission && !guild) {
       return interaction.reply({
         content: "❌ This command cannot be used in DMs.",
-        ephemeral: true,
+        flags: 64,
       });
     }
 
@@ -84,7 +103,7 @@ module.exports = {
       if (guild && !allowed.includes(guild.id)) {
         return interaction.reply({
           content: "❌ This command is not allowed in this server.",
-          ephemeral: true,
+          flags: 64,
         });
       }
     }
@@ -92,7 +111,7 @@ module.exports = {
     if (nsfwOnly && (!guild || !interaction.channel.nsfw)) {
       return interaction.reply({
         content: "❌ This command can only be used in NSFW channels.",
-        ephemeral: true,
+        flags: 64,
       });
     }
 
@@ -101,7 +120,7 @@ module.exports = {
       if (!member.voice.channel) {
         return interaction.reply({
           content: "❌ You need to be in a voice channel to use this command.",
-          ephemeral: true,
+          flags: 64,
         });
       }
     }
@@ -120,13 +139,13 @@ module.exports = {
         if (!roleIDs.some((roleId) => member.roles.cache.has(roleId))) {
           return interaction.reply({
             content: `❌ You need one of the required roles to use this command.`,
-            ephemeral: true,
+            flags: 64,
           });
         }
       } else {
         return interaction.reply({
           content: "❌ This command requires a server context.",
-          ephemeral: true,
+          flags: 64,
         });
       }
     }
@@ -137,10 +156,12 @@ module.exports = {
         (perm) => !member.permissions.has(PermissionsBitField.Flags[perm])
       );
       if (missingPermissions.length > 0) {
-        const permLabels = missingPermissions.map(getPermissionLabel).join(", ");
+        const permLabels = missingPermissions
+          .map(getPermissionLabel)
+          .join(", ");
         return interaction.reply({
           content: `❌ You are missing the following permissions to use this command: ${permLabels}`,
-          ephemeral: true,
+          flags: 64,
         });
       }
     }
@@ -148,8 +169,10 @@ module.exports = {
     const timeLeft = checkAndSetCooldown(command.name, userId, cooldown);
     if (timeLeft) {
       return interaction.reply({
-        content: `⏳ Please wait ${timeLeft.toFixed(1)}s before reusing the \`${command.name}\` command.`,
-        ephemeral: true,
+        content: `⏳ Please wait ${timeLeft.toFixed(1)}s before reusing the \`${
+          command.name
+        }\` command.`,
+        flags: 64,
       });
     }
 
@@ -160,7 +183,7 @@ module.exports = {
       if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({
           content: "❌ There was an error while executing this command.",
-          ephemeral: true,
+          flags: 64,
         });
       }
     }

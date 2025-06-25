@@ -44,7 +44,6 @@ const config = require("./config");
       await client.destroy();
     }
 
-    await closeConnection(); // 🧹 Close MongoDB connection on shutdown
 
     process.exit(0);
   };
