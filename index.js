@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { Collection, Client, EmbedBuilder, WebhookClient, ChannelType } = require("discord.js");
+const { Collection, Client } = require("discord.js");
 const color = require("colors");
 
 const { loadSlashCommands } = require("./Src/Handlers/Load/slashCommand");
@@ -9,6 +9,7 @@ const clientSettingsObject = require("./Src/Functions/clientSettingsObject");
 const config = require("./config");
 
 (async () => {
+  let client;
   try {
 
     // Create the Discord client
@@ -25,12 +26,12 @@ const config = require("./config");
     loadAntiCrash(client, color);
     loadEvents(client, color);
 
-
     // Log in to Discord
     await client.login(process.env.TOKEN);
 
     // Register Slash commands
     loadSlashCommands(client, color);
+
   } catch (error) {
     console.error("❌ Startup error:", error);
   }
@@ -38,11 +39,12 @@ const config = require("./config");
   // Graceful shutdown
   const shutdown = async () => {
     console.log("🛑 Shutting down gracefully...".yellow);
-    // Destroy Discord client
     if (client) {
       client.removeAllListeners();
       await client.destroy();
     }
+
+    await closeConnection(); // 🧹 Close MongoDB connection on shutdown
 
     process.exit(0);
   };
